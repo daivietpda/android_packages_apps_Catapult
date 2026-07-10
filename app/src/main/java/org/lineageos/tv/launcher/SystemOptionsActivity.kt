@@ -26,7 +26,6 @@ import android.text.SpannableString
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
-import android.view.WindowManagerGlobal
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.viewModels
@@ -108,16 +107,35 @@ class SystemOptionsActivity : ModalActivity(R.layout.activity_system_options),
         if (AppManager.isSystemApp(this)) {
             sleepMaterialButton.setOnClickListener {
                 val pm: PowerManager = getSystemService(PowerManager::class.java) as PowerManager
-                pm.goToSleep(
-                    SystemClock.uptimeMillis(),
-                    PowerManager.GO_TO_SLEEP_REASON_POWER_BUTTON,
-                    0
-                )
+                try {
+                    val goToSleepMethod = pm.javaClass.getMethod(
+                        "goToSleep",
+                        Long::class.javaPrimitiveType,
+                        Int::class.javaPrimitiveType,
+                        Int::class.javaPrimitiveType
+                    )
+                    val GO_TO_SLEEP_REASON_POWER_BUTTON = 4
+                    goToSleepMethod.invoke(
+                        pm,
+                        SystemClock.uptimeMillis(),
+                        GO_TO_SLEEP_REASON_POWER_BUTTON,
+                        0
+                    )
+                } catch (e: Exception) {
+                    Log.e("SystemOptionsActivity", "Failed to go to sleep", e)
+                }
             }
 
             powerMaterialButton.setOnClickListener {
-                val wm = WindowManagerGlobal.getWindowManagerService()
-                wm?.showGlobalActions()
+                try {
+                    val wmClass = Class.forName("android.view.WindowManagerGlobal")
+                    val getWindowManagerService = wmClass.getMethod("getWindowManagerService")
+                    val wm = getWindowManagerService.invoke(null)
+                    val showGlobalActions = wm?.javaClass?.getMethod("showGlobalActions")
+                    showGlobalActions?.invoke(wm)
+                } catch (e: Exception) {
+                    Log.e("SystemOptionsActivity", "Failed to show global actions", e)
+                }
             }
         } else {
             sleepMaterialButton.visibility = View.GONE

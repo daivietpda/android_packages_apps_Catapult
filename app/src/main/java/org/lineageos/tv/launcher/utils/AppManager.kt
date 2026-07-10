@@ -9,12 +9,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.ApplicationInfo.FLAG_SYSTEM
+import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.net.Uri
 import androidx.preference.PreferenceManager
 import org.lineageos.tv.launcher.ext.favoriteApps
 import org.lineageos.tv.launcher.model.LeanbackAppInfo
-
-import com.android.settingslib.Utils as SettingsLibUtils
 
 object AppManager {
     fun updateFavoriteApps(context: Context, installedApps: List<LeanbackAppInfo>) {
@@ -61,11 +61,27 @@ object AppManager {
     }
 
     fun uninstallable(app: ApplicationInfo, context: Context): Boolean {
-        return !isSystemApp(context) && !app.isSignedWithPlatformKey && !SettingsLibUtils.isEssentialPackage(
-            context.resources,
-            context.packageManager,
-            app.packageName
-        )
+        val isSignedWithPlatformKey = try {
+            val method = app.javaClass.getMethod("isSignedWithPlatformKey")
+            method.invoke(app) as Boolean
+        } catch (e: Exception) {
+            false
+        }
+
+        val isEssentialPackage = try {
+            val clazz = Class.forName("com.android.settingslib.Utils")
+            val method = clazz.getMethod(
+                "isEssentialPackage",
+                Resources::class.java,
+                PackageManager::class.java,
+                String::class.java
+            )
+            method.invoke(null, context.resources, context.packageManager, app.packageName) as Boolean
+        } catch (e: Exception) {
+            false
+        }
+
+        return !isSystemApp(context) && !isSignedWithPlatformKey && !isEssentialPackage
     }
 
     fun isSystemApp(context: Context): Boolean {
