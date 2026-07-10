@@ -39,7 +39,9 @@
         <item name="android:windowTransitionBackgroundFadeDuration">350</item>
     </style>
 
-    <style name="Theme.Catapult" parent="Theme.Material3.DayNight.NoActionBar.Leanback" />
+    <style name="Theme.Catapult" parent="Theme.Material3.DayNight.NoActionBar.Leanback">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
 
     <style name="Theme.Catapult.SideActivity">
         <item name="android:windowIsTranslucent">true</item>
