@@ -23,6 +23,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.leanback.widget.VerticalGridView
@@ -30,6 +31,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.PreferenceManager
+import coil.load
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -42,6 +44,7 @@ import org.lineageos.tv.launcher.adapter.WatchNextAdapter
 import org.lineageos.tv.launcher.ext.favoriteApps
 import org.lineageos.tv.launcher.ext.homeRoleRequestDialogDismissed
 import org.lineageos.tv.launcher.ext.roleCanBeRequested
+import org.lineageos.tv.launcher.ext.wallpaperUri
 import org.lineageos.tv.launcher.model.AppInfo
 import org.lineageos.tv.launcher.model.InternalChannel
 import org.lineageos.tv.launcher.model.MainRowItem
@@ -63,6 +66,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     private val assistantHintImageView by lazy { findViewById<ImageView>(R.id.assistantHintImageView)!! }
     private val keyboardAssistantButton by lazy { findViewById<ImageButton>(R.id.keyboard_assistant)!! }
     private val mainVerticalGridView by lazy { findViewById<VerticalGridView>(R.id.main_vertical_grid)!! }
+    private val wallpaperImageView by lazy { findViewById<ImageView>(R.id.wallpaperImageView)!! }
     private val settingButton by lazy { findViewById<ImageButton>(R.id.settingsMaterialButton)!! }
     private val notificationCountTextView by lazy { findViewById<TextView>(R.id.notificationCountTextView)!! }
     private val topBarContainer by lazy { findViewById<LinearLayout>(R.id.top_bar)!! }
@@ -189,6 +193,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             sharedPreferences.favoriteApps = it
         }
 
+        applyWallpaper()
+
         settingButton.requestFocus()
 
         permissionsGatedCallback.runAfterPermissionsCheck()
@@ -232,6 +238,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     override fun onResume() {
         super.onResume()
+        applyWallpaper()
     }
 
     override fun onDestroy() {
@@ -307,6 +314,29 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 .show().also {
                     it.getButton(DialogInterface.BUTTON_NEUTRAL).requestFocus()
                 }
+        }
+    }
+
+    private fun applyWallpaper() {
+        val wallpaper = sharedPreferences.wallpaperUri
+        if (wallpaper.isNullOrBlank()) {
+            wallpaperImageView.isVisible = true
+            wallpaperImageView.load(R.drawable.default_wallpaper) {
+                crossfade(true)
+            }
+            return
+        }
+
+        wallpaperImageView.isVisible = true
+        wallpaperImageView.load(wallpaper.toUri()) {
+            crossfade(true)
+            listener(
+                onError = { _, _ ->
+                    wallpaperImageView.load(R.drawable.default_wallpaper) {
+                        crossfade(true)
+                    }
+                }
+            )
         }
     }
 }

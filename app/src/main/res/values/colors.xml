@@ -4,5 +4,14 @@
      SPDX-License-Identifier: Apache-2.0
 -->
 <resources>
+    <color name="app_background">#000000</color>
+    <color name="modal_background">#111418</color>
+    <color name="modal_surface">#161B20</color>
+    <color name="modal_surface_variant">#1F252B</color>
+    <color name="surface_container_low">#0F1317</color>
+    <color name="surface_container">#161B20</color>
+    <color name="surface_container_high">#1F252B</color>
+    <color name="on_dark_surface">#F2F4F7</color>
+    <color name="on_dark_surface_variant">#C2C8CF</color>
     <color name="toggleButtonBackground">#0B2A2C</color>
 </resources>

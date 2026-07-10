@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The LineageOS Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="135"
+                android:endColor="#0A1A24"
+                android:startColor="#02060B"
+                android:type="linear" />
+        </shape>
+    </item>
+
+    <item
+        android:left="-120dp"
+        android:top="-100dp">
+        <shape android:shape="oval">
+            <size
+                android:width="340dp"
+                android:height="340dp" />
+            <gradient
+                android:centerColor="#334E6A"
+                android:endColor="#00334E6A"
+                android:gradientRadius="170dp"
+                android:startColor="#66334E6A"
+                android:type="radial" />
+        </shape>
+    </item>
+
+    <item
+        android:right="-80dp"
+        android:top="120dp">
+        <shape android:shape="oval">
+            <size
+                android:width="260dp"
+                android:height="260dp" />
+            <gradient
+                android:centerColor="#1E8C9B"
+                android:endColor="#001E8C9B"
+                android:gradientRadius="130dp"
+                android:startColor="#661E8C9B"
+                android:type="radial" />
+        </shape>
+    </item>
+
+    <item
+        android:left="60dp"
+        android:bottom="-140dp">
+        <shape android:shape="oval">
+            <size
+                android:width="420dp"
+                android:height="420dp" />
+            <gradient
+                android:centerColor="#215E4A"
+                android:endColor="#00215E4A"
+                android:gradientRadius="210dp"
+                android:startColor="#33215E4A"
+                android:type="radial" />
+        </shape>
+    </item>
+
+    <item android:drawable="@drawable/default_wallpaper_overlay" />
+</layer-list>

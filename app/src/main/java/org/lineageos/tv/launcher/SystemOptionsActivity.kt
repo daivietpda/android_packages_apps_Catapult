@@ -35,8 +35,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
+import androidx.preference.PreferenceManager
 import org.lineageos.tv.launcher.ext.NetworkState
 import org.lineageos.tv.launcher.ext.networkCallbackFlow
+import org.lineageos.tv.launcher.ext.wallpaperUri
 import org.lineageos.tv.launcher.notification.NotificationAdapter
 import org.lineageos.tv.launcher.notification.NotificationUtils
 import org.lineageos.tv.launcher.notification.ServiceConnectionState
@@ -59,13 +61,16 @@ class SystemOptionsActivity : ModalActivity(R.layout.activity_system_options),
     private val noNotificationAccessLinearLayout by lazy { findViewById<LinearLayout>(R.id.noNotificationAccessLinearLayout)!! }
     private val noNotificationsTextView by lazy { findViewById<TextView>(R.id.noNotificationsTextView)!! }
     private val notificationsVerticalGridView by lazy { findViewById<VerticalGridView>(R.id.notificationsVerticalGridView)!! }
+    private val deleteWallpaperMaterialButton by lazy { findViewById<MaterialButton>(R.id.deleteWallpaperMaterialButton)!! }
     private val powerMaterialButton by lazy { findViewById<MaterialButton>(R.id.powerMaterialButton)!! }
     private val settingsButton by lazy { findViewById<MaterialButton>(R.id.settingsMaterialButton)!! }
     private val sleepMaterialButton by lazy { findViewById<MaterialButton>(R.id.sleepMaterialButton)!! }
+    private val wallpaperMaterialButton by lazy { findViewById<MaterialButton>(R.id.wallpaperMaterialButton)!! }
 
     private val notificationAdapter: NotificationAdapter by lazy { NotificationAdapter(this, this) }
 
     private val connectivityManager by lazy { getSystemService(ConnectivityManager::class.java)!! }
+    private val sharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,6 +100,15 @@ class SystemOptionsActivity : ModalActivity(R.layout.activity_system_options),
 
         settingsButton.setOnClickListener {
             startActivity(SETTINGS)
+        }
+
+        wallpaperMaterialButton.setOnClickListener {
+            startActivity(Intent(this, WallpaperPickerActivity::class.java))
+        }
+
+        deleteWallpaperMaterialButton.setOnClickListener {
+            sharedPreferences.wallpaperUri = null
+            finish()
         }
 
         allowNotificationAccessMaterialButton.setOnClickListener {

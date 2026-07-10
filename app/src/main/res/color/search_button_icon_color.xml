@@ -4,6 +4,6 @@
      SPDX-License-Identifier: Apache-2.0
 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:color="#1A1B21" android:state_focused="true" />
-    <item android:color="@android:color/white" />
+    <item android:color="@color/on_dark_surface" android:state_focused="true" />
+    <item android:color="@color/on_dark_surface" />
 </selector>

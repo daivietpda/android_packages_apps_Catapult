@@ -77,3 +77,15 @@ var SharedPreferences.homeRoleRequestDialogDismissed: Boolean
     set(value) = edit {
         putBoolean(HOME_ROLE_REQUEST_DIALOG_DISMISSED, value)
     }
+
+const val WALLPAPER_URI = "wallpaper_uri"
+
+var SharedPreferences.wallpaperUri: String?
+    get() = getString(WALLPAPER_URI, null)
+    set(value) = edit {
+        if (value == null) {
+            remove(WALLPAPER_URI)
+        } else {
+            putString(WALLPAPER_URI, value)
+        }
+    }

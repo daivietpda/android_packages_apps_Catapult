@@ -41,6 +41,7 @@
                 <TextClock
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textColor="?attr/colorOnSurface"
                     android:textAppearance="?attr/textAppearanceHeadlineLarge" />
 
             </LinearLayout>
@@ -84,6 +85,28 @@
                     app:iconPadding="0dp" />
 
             </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/wallpaperMaterialButton"
+                style="@style/SystemOptionsButtonStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:text="@string/wallpaper"
+                app:icon="@drawable/ic_wallpaper" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/deleteWallpaperMaterialButton"
+                style="@style/SystemOptionsButtonStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:text="@string/delete_wallpaper"
+                app:icon="@drawable/ic_delete" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -140,7 +163,8 @@
                     android:layout_height="wrap_content"
                     android:text="@string/no_notification_access"
                     android:textAlignment="center"
-                    android:textAppearance="?attr/textAppearanceTitleMedium" />
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnSurface" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/allowNotificationAccessMaterialButton"
@@ -156,6 +180,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/no_notifications"
                 android:textAppearance="?attr/textAppearanceBody2"
+                android:textColor="?attr/colorOnSurface"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"

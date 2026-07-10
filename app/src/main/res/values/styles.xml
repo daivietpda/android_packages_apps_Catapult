@@ -20,6 +20,7 @@
         <item name="android:layout_marginBottom">30dp</item>
         <item name="android:layout_marginStart">20dp</item>
         <item name="android:layout_marginEnd">20dp</item>
+        <item name="android:textColor">@color/on_dark_surface</item>
     </style>
 
     <style name="SystemOptionsButtonStyle">

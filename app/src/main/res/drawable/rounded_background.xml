@@ -9,6 +9,6 @@
     android:insetBottom="@dimen/modal_margin">
     <shape android:shape="rectangle">
         <corners android:radius="24dp" />
-        <solid android:color="?attr/colorSurfaceContainer" />
+        <solid android:color="@color/modal_background" />
     </shape>
 </inset>

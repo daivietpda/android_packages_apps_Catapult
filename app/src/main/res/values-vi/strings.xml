@@ -5,6 +5,9 @@
 -->
 <resources>
     <string name="settings">Cài đặt</string>
+    <string name="wallpaper">Hình nền</string>
+    <string name="delete_wallpaper">Xóa hình nền</string>
+    <string name="use_default_wallpaper">Dùng hình nền mặc định</string>
     <string name="favorites">Yêu thích</string>
     <string name="all_apps">Tất cả ứng dụng</string>
     <string name="uninstall">Gỡ cài đặt</string>

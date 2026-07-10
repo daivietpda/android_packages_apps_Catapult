@@ -40,7 +40,20 @@
     </style>
 
     <style name="Theme.Catapult" parent="Theme.Material3.DayNight.NoActionBar.Leanback">
-        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowBackground">@color/app_background</item>
+        <item name="android:colorBackground">@color/app_background</item>
+        <item name="colorSurface">@color/modal_surface</item>
+        <item name="colorSurfaceVariant">@color/modal_surface_variant</item>
+        <item name="colorSurfaceContainerLow">@color/surface_container_low</item>
+        <item name="colorSurfaceContainer">@color/surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/surface_container_high</item>
+        <item name="colorOnBackground">@color/on_dark_surface</item>
+        <item name="colorOnSurface">@color/on_dark_surface</item>
+        <item name="colorOnSurfaceVariant">@color/on_dark_surface_variant</item>
+        <item name="colorSecondaryContainer">@color/surface_container_high</item>
+        <item name="colorOnSecondaryContainer">@color/on_dark_surface</item>
+        <item name="android:textColorPrimary">@color/on_dark_surface</item>
+        <item name="android:textColorSecondary">@color/on_dark_surface_variant</item>
     </style>
 
     <style name="Theme.Catapult.SideActivity">
