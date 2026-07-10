@@ -6,8 +6,10 @@
 package org.lineageos.tv.launcher
 
 import android.app.role.RoleManager
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.transition.Slide
 import android.transition.TransitionManager
@@ -67,7 +69,13 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     private val voiceAssistantButton by lazy { findViewById<ImageButton>(R.id.voice_assistant)!! }
 
     // System services
-    private val roleManager by lazy { getSystemService(RoleManager::class.java)!! }
+    private val roleManager by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            getSystemService(RoleManager::class.java)
+        } else {
+            null
+        }
+    }
 
     // Activity request launchers
     private val homeRoleActivityRequestLauncher = registerForActivityResult(
@@ -277,7 +285,9 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     }
 
     private fun askForHomeRoleIfNeeded() {
-        if (!AppManager.isSystemApp(this) && roleManager.roleCanBeRequested(RoleManager.ROLE_HOME)
+        val roleMgr = roleManager ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+            !AppManager.isSystemApp(this) && roleMgr.roleCanBeRequested(RoleManager.ROLE_HOME)
             && !sharedPreferences.homeRoleRequestDialogDismissed
         ) {
             MaterialAlertDialogBuilder(this)
@@ -285,7 +295,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 .setMessage(R.string.home_role_request_dialog_message)
                 .setPositiveButton(android.R.string.ok) { _, _ ->
                     homeRoleActivityRequestLauncher.launch(
-                        roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME)
+                        roleMgr.createRequestRoleIntent(RoleManager.ROLE_HOME)
                     )
                 }
                 .setNeutralButton(R.string.home_role_request_dialog_neutral) { _, _ ->

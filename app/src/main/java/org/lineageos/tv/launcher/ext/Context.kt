@@ -18,6 +18,6 @@ fun Context.getAttributeResourceId(@AttrRes attribute: Int) = resolveAttribute(a
 
 @ColorInt
 fun Context.getAttributeColor(@AttrRes attribute: Int) = resolveAttribute(attribute).let {
-    require(it.isColorType)
+    require(it.type >= TypedValue.TYPE_FIRST_COLOR_INT && it.type <= TypedValue.TYPE_LAST_COLOR_INT)
     it.data
 }

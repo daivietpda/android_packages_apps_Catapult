@@ -6,6 +6,7 @@
 package org.lineageos.tv.launcher.view
 
 import android.content.Context
+import android.os.Build
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
@@ -75,7 +76,9 @@ abstract class AppCardCommon @JvmOverloads constructor(
     fun showPopupMenu() {
         val popupMenu = PopupMenu(context, this, Gravity.START, 0, R.style.PopupMenu)
         popupMenu.menuInflater.inflate(menuResId, popupMenu.menu)
-        popupMenu.setForceShowIcon(true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            popupMenu.setForceShowIcon(true)
+        }
 
         // See if this card is already a favorite
         if (packageName in AppManager.getFavoriteApps(context)) {

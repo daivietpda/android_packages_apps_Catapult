@@ -7,6 +7,7 @@ package org.lineageos.tv.launcher.notification
 
 import android.app.Notification
 import android.content.Context
+import android.os.Build
 import android.service.notification.StatusBarNotification
 import android.view.KeyEvent
 import android.view.ViewGroup
@@ -65,7 +66,11 @@ class NotificationAdapter(
                     oldItem.notification.extras.getString(Notification.EXTRA_TEXT) == newItem.notification.extras.getString(
                 Notification.EXTRA_TEXT
             ) &&
-                    oldItem.notification.smallIcon.resId == newItem.notification.smallIcon.resId
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        oldItem.notification.smallIcon.resId == newItem.notification.smallIcon.resId
+                    } else {
+                        oldItem.notification.smallIcon.toString() == newItem.notification.smallIcon.toString()
+                    }
         }
     }
 

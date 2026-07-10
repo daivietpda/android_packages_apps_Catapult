@@ -13,7 +13,6 @@ import android.icu.text.DateFormat
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import android.net.TransportInfo
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.os.Build
@@ -160,7 +159,11 @@ class SystemOptionsActivity : ModalActivity(R.layout.activity_system_options),
 
                     is NetworkState.CapabilitiesChanged ->
                         setNetworkButton(
-                            transportInfo = it.networkCapabilities.transportInfo,
+                            transportInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                it.networkCapabilities.transportInfo
+                            } else {
+                                null
+                            },
                             capabilities = it.networkCapabilities
                         )
                 }
@@ -244,7 +247,7 @@ class SystemOptionsActivity : ModalActivity(R.layout.activity_system_options),
     }
 
     private fun setNetworkButton(
-        transportInfo: TransportInfo? = null,
+        transportInfo: Any? = null,
         capabilities: NetworkCapabilities? = connectivityManager.getNetworkCapabilities(
             connectivityManager.activeNetwork
         )
@@ -264,9 +267,24 @@ class SystemOptionsActivity : ModalActivity(R.layout.activity_system_options),
             networkIcon = R.drawable.ic_ethernet
         } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
             // WIFI connection
-            if (transportInfo is WifiInfo) {
+            val wifiInfo = transportInfo as? WifiInfo ?: connectivityManager.getNetworkCapabilities(
+                connectivityManager.activeNetwork
+            )?.let {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    it.transportInfo as? WifiInfo
+                } else {
+                    null
+                }
+            } ?: (getSystemService(WifiManager::class.java) as WifiManager).connectionInfo
+
+            if (wifiInfo != null) {
                 val wifiManager = getSystemService(WifiManager::class.java)!!
-                val wifiStrength = wifiManager.calculateSignalLevel(transportInfo.rssi)
+                val wifiStrength = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    wifiManager.calculateSignalLevel(wifiInfo.rssi)
+                } else {
+                    @Suppress("DEPRECATION")
+                    WifiManager.calculateSignalLevel(wifiInfo.rssi, 5)
+                }
                 networkString = resources.getString(R.string.connected)
                 networkIcon = wifiIcons[wifiStrength.coerceIn(0, wifiIcons.size - 1)]
             } else {

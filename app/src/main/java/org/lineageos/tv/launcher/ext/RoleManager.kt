@@ -6,6 +6,11 @@
 package org.lineageos.tv.launcher.ext
 
 import android.app.role.RoleManager
+import android.os.Build
 
 fun RoleManager.roleCanBeRequested(roleName: String) =
-    isRoleAvailable(roleName) && !isRoleHeld(roleName)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        isRoleAvailable(roleName) && !isRoleHeld(roleName)
+    } else {
+        false
+    }
