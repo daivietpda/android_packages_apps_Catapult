@@ -53,4 +53,5 @@
     <string name="connected">Connected</string>
     <string name="mic_assistant">Search using microphone</string>
     <string name="keyboard_assistant">Search using keyboard</string>
+    <string name="error_activity_not_found">No activity found to handle this action</string>
 </resources>
