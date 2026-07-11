@@ -8,7 +8,6 @@ package org.lineageos.tv.launcher.utils
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.preference.PreferenceManager
-import androidx.tvprovider.media.tv.PreviewChannel
 import org.lineageos.tv.launcher.R
 import org.lineageos.tv.launcher.ext.hiddenChannels
 import org.lineageos.tv.launcher.model.InternalChannel
@@ -29,19 +28,19 @@ object Suggestions {
         }
     }
 
-    fun getChannelTitle(context: Context, previewChannel: PreviewChannel): String {
-        val appName = previewChannel.getAppName(context)
+    fun getChannelTitle(context: Context, packageName: String?, displayName: String): String {
+        val appName = getAppName(context, packageName)
         if (appName.isEmpty()) {
-            return previewChannel.displayName.toString()
+            return displayName
         }
 
         // Avoid having "appName: appName" in the list title
-        if (appName == previewChannel.displayName) {
+        if (appName == displayName) {
             return appName
         }
 
         return context.resources.getString(
-            R.string.channel_title, appName, previewChannel.displayName
+            R.string.channel_title, appName, displayName
         )
     }
 
@@ -58,10 +57,14 @@ object Suggestions {
         return sortedPresentItems + remainingItems
     }
 
-    private fun PreviewChannel.getAppName(context: Context): String {
+    private fun getAppName(context: Context, packageName: String?): String {
+        if (packageName.isNullOrBlank()) {
+            return ""
+        }
+
         val packageManager: PackageManager = context.packageManager
         return try {
-            val applicationInfo = packageManager.getApplicationInfo(this.packageName, 0)
+            val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
             packageManager.getApplicationLabel(applicationInfo).toString()
         } catch (e: PackageManager.NameNotFoundException) {
             ""

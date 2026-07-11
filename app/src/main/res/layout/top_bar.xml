@@ -64,9 +64,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
+            android:focusable="true"
+            android:textColor="@color/top_bar_action_content_color"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             style="@style/TopBarImageButton"
             android:drawablePadding="5dp"
+            app:drawableTint="@color/top_bar_action_content_color"
             app:drawableLeftCompat="@drawable/ic_bell" />
 
         <ImageButton

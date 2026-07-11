@@ -59,11 +59,11 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_margin">8dp</item>
-        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
-        <item name="android:backgroundTint">?attr/colorSecondaryContainer</item>
-        <item name="android:padding">4dp</item>
-        <item name="android:stateListAnimator">@animator/app_card_state_animator</item>
-        <item name="tint">@color/settings_color</item>
+        <item name="android:background">@drawable/top_bar_action_background</item>
+        <item name="android:backgroundTint">@null</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:stateListAnimator">@animator/top_bar_action_state_animator</item>
+        <item name="tint">@color/top_bar_action_content_color</item>
     </style>
 
     <style name="TopBarSearchButton" parent="TopBarImageButton">

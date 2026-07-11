@@ -6,13 +6,12 @@
 package org.lineageos.tv.launcher.model
 
 import android.content.Context
-import androidx.tvprovider.media.tv.PreviewChannel
 import org.lineageos.tv.launcher.R
 
 class Channel(
     val id: Long,
     val title: String,
-    val previewChannel: PreviewChannel? = null,
+    val isExternalChannel: Boolean = false,
 ) {
     companion object {
         fun getFavoritesAppsChannel(context: Context) = Channel(

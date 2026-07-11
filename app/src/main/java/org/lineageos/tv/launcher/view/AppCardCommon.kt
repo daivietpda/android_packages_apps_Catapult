@@ -6,10 +6,13 @@
 package org.lineageos.tv.launcher.view
 
 import android.content.Context
+import android.graphics.Outline
 import android.os.Build
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
+import android.view.ViewOutlineProvider
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupMenu
@@ -35,9 +38,26 @@ abstract class AppCardCommon @JvmOverloads constructor(
     protected val nameView by lazy { findViewById<TextView>(R.id.app_name)!! }
 
     private var uninstallable: Boolean = true
+    private var mediaOutlineApplied: Boolean = false
 
     init {
         setupNameMarquee()
+    }
+
+    protected fun setupMediaContainerOutline() {
+        if (mediaOutlineApplied) {
+            return
+        }
+
+        val container = findViewById<FrameLayout>(R.id.mediaContainer) ?: return
+        val radius = resources.getDimension(R.dimen.app_card_radius)
+        container.outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: Outline) {
+                outline.setRoundRect(0, 0, view.width, view.height, radius)
+            }
+        }
+        container.clipToOutline = true
+        mediaOutlineApplied = true
     }
 
     private fun setupNameMarquee() {
@@ -52,6 +72,7 @@ abstract class AppCardCommon @JvmOverloads constructor(
     }
 
     override fun setCardInfo(appInfo: Launchable) {
+        setupMediaContainerOutline()
         super.setCardInfo(appInfo)
 
         // Reset

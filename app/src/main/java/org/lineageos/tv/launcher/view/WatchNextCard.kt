@@ -7,7 +7,11 @@ package org.lineageos.tv.launcher.view
 
 import android.animation.AnimatorInflater
 import android.content.Context
+import android.graphics.Outline
 import android.util.AttributeSet
+import android.view.View
+import android.view.ViewOutlineProvider
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.view.isInvisible
@@ -23,11 +27,14 @@ class WatchNextCard @JvmOverloads constructor(
 ) : Card(context, attrs, defStyleAttr) {
     // Views
     private val bannerView: ImageView by lazy { findViewById(R.id.app_banner)!! }
+    private val mediaContainer: FrameLayout by lazy { findViewById(R.id.mediaContainer)!! }
     private val title: TextView by lazy { findViewById(R.id.title)!! }
     private val progressView: LinearProgressIndicator by lazy { findViewById(R.id.watch_progress)!! }
 
     init {
         inflate(context, R.layout.watch_next_card, this)
+
+        setupMediaContainerOutline()
 
         stateListAnimator =
             AnimatorInflater.loadStateListAnimator(context, R.animator.app_card_state_animator)
@@ -44,6 +51,16 @@ class WatchNextCard @JvmOverloads constructor(
                 title.isSelected = false
             }
         }
+    }
+
+    private fun setupMediaContainerOutline() {
+        val radius = resources.getDimension(R.dimen.app_card_radius)
+        mediaContainer.outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: Outline) {
+                outline.setRoundRect(0, 0, view.width, view.height, radius)
+            }
+        }
+        mediaContainer.clipToOutline = true
     }
 
     @Suppress("RestrictedApi")

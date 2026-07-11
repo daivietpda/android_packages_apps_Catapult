@@ -15,8 +15,10 @@
     android:orientation="vertical">
 
     <FrameLayout
+        android:id="@+id/mediaContainer"
         android:layout_width="match_parent"
         android:layout_height="@dimen/watch_next_card_height"
+        android:background="@drawable/card_border_only"
         android:clipChildren="true"
         android:clipToOutline="true">
 
@@ -24,7 +26,7 @@
             android:id="@+id/app_banner"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/card_border_only"
+            android:scaleType="centerCrop"
             android:backgroundTint="@android:color/black"
             android:clipToOutline="true"
             android:visibility="gone" />

@@ -29,22 +29,16 @@ import java.util.Collections
 class LauncherViewModel(application: Application) : AndroidViewModel(application) {
     @OptIn(ExperimentalCoroutinesApi::class)
     val channelsToPrograms = LauncherRepository.previewChannels(context)
-        .map { previewChannels ->
+        .map { externalChannels ->
             listOf(
                 Channel.getFavoritesAppsChannel(context),
                 Channel.getWatchNextChannel(context),
-                *previewChannels.map {
-                    Channel(
-                        it.id,
-                        Suggestions.getChannelTitle(context, it),
-                        it
-                    )
-                }.toTypedArray(),
+                *externalChannels.toTypedArray(),
                 Channel.getAllAppsChannel(context),
             )
         }
-        .combine(LauncherRepository.hiddenChannels(context)) { previewChannels, hiddenChannels ->
-            previewChannels.filter { !hiddenChannels.contains(it.id) }
+        .combine(LauncherRepository.hiddenChannels(context)) { channels, hiddenChannels ->
+            channels.filter { !hiddenChannels.contains(it.id) }
         }
         .flatMapLatest {
             channelFlow {
@@ -56,7 +50,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 send(it.map { it to previewPrograms[it.id] })
 
                 it.filter { channel ->
-                    channel.previewChannel != null
+                    channel.isExternalChannel
                 }.forEach { channel ->
                     launch {
                         getPreviewPrograms(channel.id).collect { emittedElement ->

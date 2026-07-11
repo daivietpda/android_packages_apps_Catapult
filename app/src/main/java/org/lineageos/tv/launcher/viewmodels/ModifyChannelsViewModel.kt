@@ -22,25 +22,19 @@ import org.lineageos.tv.launcher.utils.Suggestions.orderSuggestions
 
 class ModifyChannelsViewModel(application: Application) : AndroidViewModel(application) {
     val channelsToEnabled = LauncherRepository.previewChannels(context)
-        .map { previewChannels ->
+        .map { externalChannels ->
             listOf(
                 Channel.getFavoritesAppsChannel(context),
                 Channel.getWatchNextChannel(context),
-                *previewChannels.map {
-                    Channel(
-                        it.id,
-                        Suggestions.getChannelTitle(context, it),
-                        it
-                    )
-                }.toTypedArray(),
+                *externalChannels.toTypedArray(),
                 Channel.getAllAppsChannel(context),
             )
         }
-        .combine(LauncherRepository.hiddenChannels(context)) { previewChannels, hiddenChannels ->
-            previewChannels.map { it to !hiddenChannels.contains(it.id) }
+        .combine(LauncherRepository.hiddenChannels(context)) { channels, hiddenChannels ->
+            channels.map { it to !hiddenChannels.contains(it.id) }
         }
-        .combine(LauncherRepository.knownChannels(context)) { previewChannels, knownChannels ->
-            previewChannels.orderSuggestions(knownChannels) { it.first.id }
+        .combine(LauncherRepository.knownChannels(context)) { channels, knownChannels ->
+            channels.orderSuggestions(knownChannels) { it.first.id }
         }
         .flowOn(Dispatchers.IO)
         .stateIn(
