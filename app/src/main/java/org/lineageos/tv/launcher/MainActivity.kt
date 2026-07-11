@@ -5,11 +5,15 @@
 
 package org.lineageos.tv.launcher
 
+import android.animation.ValueAnimator
 import android.app.role.RoleManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.transition.Slide
@@ -17,6 +21,7 @@ import android.transition.TransitionManager
 import android.util.Log
 import android.view.Gravity
 import android.view.View
+import android.view.animation.DecelerateInterpolator
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -26,19 +31,30 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.ColorUtils
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
+import androidx.leanback.widget.OnChildViewHolderSelectedListener
 import androidx.leanback.widget.VerticalGridView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.palette.graphics.Palette
 import androidx.preference.PreferenceManager
+import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.lineageos.tv.launcher.adapter.AllAppsAdapter
 import org.lineageos.tv.launcher.adapter.FavoritesAdapter
 import org.lineageos.tv.launcher.adapter.MainVerticalAdapter
@@ -47,6 +63,9 @@ import org.lineageos.tv.launcher.adapter.WatchNextAdapter
 import org.lineageos.tv.launcher.ext.favoriteApps
 import org.lineageos.tv.launcher.ext.homeRoleRequestDialogDismissed
 import org.lineageos.tv.launcher.ext.roleCanBeRequested
+import org.lineageos.tv.launcher.ext.wallpaperRedditIntervalMinutes
+import org.lineageos.tv.launcher.ext.wallpaperRedditSubreddit
+import org.lineageos.tv.launcher.ext.wallpaperSourceType
 import org.lineageos.tv.launcher.ext.wallpaperUri
 import org.lineageos.tv.launcher.model.AppInfo
 import org.lineageos.tv.launcher.model.InternalChannel
@@ -55,6 +74,8 @@ import org.lineageos.tv.launcher.notification.NotificationUtils
 import org.lineageos.tv.launcher.notification.ServiceConnectionState
 import org.lineageos.tv.launcher.utils.AppManager
 import org.lineageos.tv.launcher.utils.PermissionsGatedCallback
+import org.lineageos.tv.launcher.utils.RedditWallpaperRepository
+import org.lineageos.tv.launcher.ext.WallpaperSourceType
 import org.lineageos.tv.launcher.viewmodels.LauncherViewModel
 import org.lineageos.tv.launcher.viewmodels.NotificationViewModel
 import java.util.Locale
@@ -69,6 +90,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     private val assistantHintImageView by lazy { findViewById<ImageView>(R.id.assistantHintImageView)!! }
     private val keyboardAssistantButton by lazy { findViewById<ImageButton>(R.id.keyboard_assistant)!! }
     private val mainVerticalGridView by lazy { findViewById<VerticalGridView>(R.id.main_vertical_grid)!! }
+    private val backgroundScrimView by lazy { findViewById<View>(R.id.backgroundScrimView)!! }
     private val wallpaperImageView by lazy { findViewById<ImageView>(R.id.wallpaperImageView)!! }
     private val settingButton by lazy { findViewById<ImageButton>(R.id.settingsMaterialButton)!! }
     private val notificationCountTextView by lazy { findViewById<TextView>(R.id.notificationCountTextView)!! }
@@ -97,6 +119,18 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     private val mainVerticalAdapter by lazy { MainVerticalAdapter() }
     private val watchNextAdapter by lazy { WatchNextAdapter() }
     private val previewChannelAdapters = mutableMapOf<Long, PreviewProgramsAdapter>()
+    private var topBarHidden = false
+    private var wallpaperRotationJob: Job? = null
+    private var scrimDefaultColor = Color.argb(96, 0, 0, 0)
+    private var scrimExpandedColor = Color.argb(70, 0, 0, 0)
+
+    companion object {
+        private const val TOP_BAR_ANIMATION_DURATION_MS = 220L
+        private const val CONTENT_SHIFT_Y = -28f
+        private const val SCRIM_ALPHA_EXPANDED = 0.90f
+        private const val SCRIM_ALPHA_DEFAULT = 1f
+        private const val WALLPAPER_SCALE_EXPANDED = 1.08f
+    }
 
     private val sharedPreferences by lazy {
         PreferenceManager.getDefaultSharedPreferences(this)
@@ -173,6 +207,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     @Suppress("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        backgroundScrimView.setBackgroundColor(scrimDefaultColor)
 
         settingButton.setOnClickListener {
             safeStartActivity(Intent(android.provider.Settings.ACTION_SETTINGS))
@@ -191,12 +226,13 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         }
 
         mainVerticalGridView.adapter = mainVerticalAdapter
+        setupTopBarAutoHideOnScroll()
 
         favoritesAdapter.onFavoritesChangedCallback = {
             sharedPreferences.favoriteApps = it
         }
 
-        applyWallpaper()
+        syncWallpaperForCurrentMode()
 
         settingButton.requestFocus()
 
@@ -237,11 +273,13 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         if (NotificationUtils.notificationPermissionGranted(this)) {
             notificationViewModel.bindService(this)
         }
+
+        syncWallpaperRotation()
     }
 
     override fun onResume() {
         super.onResume()
-        applyWallpaper()
+        syncWallpaperForCurrentMode()
     }
 
     override fun onDestroy() {
@@ -250,6 +288,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         if (NotificationUtils.notificationPermissionGranted(this)) {
             notificationViewModel.unbindService(this)
         }
+
+        wallpaperRotationJob?.cancel()
     }
 
     private fun setupAssistantButtons(assistIntent: Intent) {
@@ -294,6 +334,115 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         voiceAssistantButton.onFocusChangeListener = assistantButtonFocusListener
     }
 
+    private fun setupTopBarAutoHideOnScroll() {
+        mainVerticalGridView.setOnChildViewHolderSelectedListener(
+            object : OnChildViewHolderSelectedListener() {
+                override fun onChildViewHolderSelected(
+                    parent: RecyclerView,
+                    child: RecyclerView.ViewHolder?,
+                    position: Int,
+                    subposition: Int
+                ) {
+                    if (position > 0) {
+                        hideTopBar()
+                    } else {
+                        showTopBar()
+                    }
+                }
+            }
+        )
+    }
+
+    private fun hideTopBar() {
+        if (topBarHidden || !topBarContainer.isVisible) {
+            return
+        }
+
+        topBarHidden = true
+        topBarContainer.clearAnimation()
+        mainVerticalGridView.clearAnimation()
+        backgroundScrimView.animate().cancel()
+        wallpaperImageView.animate().cancel()
+
+        topBarContainer.animate()
+            .alpha(0f)
+            .translationY(-topBarContainer.height.toFloat())
+            .setDuration(TOP_BAR_ANIMATION_DURATION_MS)
+            .setInterpolator(DecelerateInterpolator())
+            .withEndAction {
+                topBarContainer.isVisible = false
+                topBarContainer.alpha = 1f
+                topBarContainer.translationY = 0f
+            }
+            .start()
+
+        mainVerticalGridView.animate()
+            .translationY(CONTENT_SHIFT_Y)
+            .setDuration(TOP_BAR_ANIMATION_DURATION_MS)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
+
+        backgroundScrimView.animate()
+            .alpha(SCRIM_ALPHA_EXPANDED)
+            .setDuration(TOP_BAR_ANIMATION_DURATION_MS)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
+        animateScrimColorTo(scrimExpandedColor)
+
+        wallpaperImageView.animate()
+            .scaleX(WALLPAPER_SCALE_EXPANDED)
+            .scaleY(WALLPAPER_SCALE_EXPANDED)
+            .setDuration(TOP_BAR_ANIMATION_DURATION_MS)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
+
+        mainVerticalGridView.updatePadding(top = 8)
+    }
+
+    private fun showTopBar() {
+        if (!topBarHidden) {
+            return
+        }
+
+        topBarHidden = false
+        topBarContainer.clearAnimation()
+        mainVerticalGridView.clearAnimation()
+        backgroundScrimView.animate().cancel()
+        wallpaperImageView.animate().cancel()
+
+        topBarContainer.isVisible = true
+        topBarContainer.alpha = 0f
+        topBarContainer.translationY = -topBarContainer.height.toFloat() / 2f
+        topBarContainer.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(TOP_BAR_ANIMATION_DURATION_MS)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
+
+        mainVerticalGridView.animate()
+            .translationY(0f)
+            .setDuration(TOP_BAR_ANIMATION_DURATION_MS)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
+
+        backgroundScrimView.animate()
+            .alpha(SCRIM_ALPHA_DEFAULT)
+            .setDuration(TOP_BAR_ANIMATION_DURATION_MS)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
+        animateScrimColorTo(scrimDefaultColor)
+
+        wallpaperImageView.animate()
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(TOP_BAR_ANIMATION_DURATION_MS)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
+
+        mainVerticalGridView.updatePadding(top = 24)
+    }
+
     private fun askForHomeRoleIfNeeded() {
         val roleMgr = roleManager ?: return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
@@ -325,22 +474,139 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         if (wallpaper.isNullOrBlank()) {
             wallpaperImageView.isVisible = true
             wallpaperImageView.load(R.drawable.default_wallpaper) {
+                allowHardware(false)
                 crossfade(true)
+                listener(
+                    onSuccess = { _, result ->
+                        applyDynamicScrimFromDrawable(result.drawable)
+                    }
+                )
             }
             return
         }
 
         wallpaperImageView.isVisible = true
         wallpaperImageView.load(wallpaper.toUri()) {
+            allowHardware(false)
             crossfade(true)
             listener(
+                onSuccess = { _, result ->
+                    applyDynamicScrimFromDrawable(result.drawable)
+                },
                 onError = { _, _ ->
                     wallpaperImageView.load(R.drawable.default_wallpaper) {
+                        allowHardware(false)
                         crossfade(true)
+                        listener(
+                            onSuccess = { _, result ->
+                                applyDynamicScrimFromDrawable(result.drawable)
+                            }
+                        )
                     }
                 }
             )
         }
+    }
+
+    private fun applyDynamicScrimFromDrawable(drawable: Drawable?) {
+        if (drawable == null) {
+            scrimDefaultColor = Color.argb(96, 0, 0, 0)
+            scrimExpandedColor = Color.argb(70, 0, 0, 0)
+            animateScrimColorTo(if (topBarHidden) scrimExpandedColor else scrimDefaultColor)
+            return
+        }
+
+        lifecycleScope.launch {
+            val (defaultColor, expandedColor) = withContext(Dispatchers.Default) {
+                val bitmap = drawable.toBitmap(
+                    width = 240,
+                    height = 135,
+                    config = android.graphics.Bitmap.Config.ARGB_8888
+                )
+                val palette = Palette.from(bitmap)
+                    .clearFilters()
+                    .maximumColorCount(16)
+                    .generate()
+                val seedColor = palette.getVibrantColor(
+                    palette.getDominantColor(
+                        palette.getMutedColor(Color.rgb(52, 78, 114))
+                    )
+                )
+                val tonedSeed = if (ColorUtils.calculateLuminance(seedColor) > 0.6) {
+                    ColorUtils.blendARGB(seedColor, Color.BLACK, 0.35f)
+                } else {
+                    seedColor
+                }
+
+                val defaultScrim = ColorUtils.setAlphaComponent(
+                    ColorUtils.blendARGB(Color.BLACK, tonedSeed, 0.08f),
+                    94
+                )
+                val expandedScrim = ColorUtils.setAlphaComponent(
+                    ColorUtils.blendARGB(Color.BLACK, tonedSeed, 0.14f),
+                    66
+                )
+                defaultScrim to expandedScrim
+            }
+
+            scrimDefaultColor = defaultColor
+            scrimExpandedColor = expandedColor
+            animateScrimColorTo(if (topBarHidden) scrimExpandedColor else scrimDefaultColor)
+        }
+    }
+
+    private fun animateScrimColorTo(targetColor: Int) {
+        val currentColor = (backgroundScrimView.background as? ColorDrawable)?.color
+            ?: scrimDefaultColor
+        ValueAnimator.ofArgb(currentColor, targetColor).apply {
+            duration = 360L
+            addUpdateListener { animator ->
+                backgroundScrimView.setBackgroundColor(animator.animatedValue as Int)
+            }
+            start()
+        }
+    }
+
+    private fun syncWallpaperForCurrentMode() {
+        when (sharedPreferences.wallpaperSourceType) {
+            WallpaperSourceType.LOCAL -> {
+                wallpaperRotationJob?.cancel()
+                applyWallpaper()
+            }
+
+            WallpaperSourceType.REDDIT -> {
+                wallpaperRotationJob?.cancel()
+                syncWallpaperRotation()
+            }
+        }
+    }
+
+    private fun syncWallpaperRotation() {
+        if (sharedPreferences.wallpaperSourceType != WallpaperSourceType.REDDIT) {
+            wallpaperRotationJob?.cancel()
+            return
+        }
+
+        wallpaperRotationJob = lifecycleScope.launch {
+            while (isActive && sharedPreferences.wallpaperSourceType == WallpaperSourceType.REDDIT) {
+                refreshRedditWallpaper()
+                val intervalMinutes = sharedPreferences.wallpaperRedditIntervalMinutes.coerceAtLeast(1)
+                delay(intervalMinutes * 60_000L)
+            }
+        }
+    }
+
+    private suspend fun refreshRedditWallpaper() {
+        val subreddit = sharedPreferences.wallpaperRedditSubreddit
+        if (subreddit.isBlank()) {
+            return
+        }
+
+        val wallpaper = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            RedditWallpaperRepository.fetchRandomWallpaperUri(subreddit)
+        } ?: return
+        sharedPreferences.wallpaperUri = wallpaper.toString()
+        applyWallpaper()
     }
 
     private fun safeStartActivity(intent: Intent) {

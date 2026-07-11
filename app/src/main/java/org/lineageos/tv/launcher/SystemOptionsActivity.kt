@@ -41,7 +41,9 @@ import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
 import androidx.preference.PreferenceManager
 import org.lineageos.tv.launcher.ext.NetworkState
+import org.lineageos.tv.launcher.ext.WallpaperSourceType
 import org.lineageos.tv.launcher.ext.networkCallbackFlow
+import org.lineageos.tv.launcher.ext.wallpaperSourceType
 import org.lineageos.tv.launcher.ext.wallpaperUri
 import org.lineageos.tv.launcher.notification.NotificationAdapter
 import org.lineageos.tv.launcher.notification.NotificationUtils
@@ -112,6 +114,7 @@ class SystemOptionsActivity : ModalActivity(R.layout.activity_system_options),
         }
 
         deleteWallpaperMaterialButton.setOnClickListener {
+            sharedPreferences.wallpaperSourceType = WallpaperSourceType.LOCAL
             sharedPreferences.wallpaperUri = null
             finish()
         }

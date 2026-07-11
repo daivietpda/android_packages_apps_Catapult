@@ -4,11 +4,12 @@
      SPDX-License-Identifier: Apache-2.0
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="350dp"
     android:layout_height="match_parent"
     android:background="@android:color/transparent"
     android:orientation="vertical"
-    android:paddingBottom="12dp">
+    android:paddingBottom="8dp">
 
     <TextView
         style="@style/SideActivityHeaderStyle"
@@ -27,11 +28,107 @@
         android:text="@string/use_default_wallpaper" />
 
     <TextView
+        style="@style/SideActivityHeaderStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/wallpaper_sources" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp">
+
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/wallpaper_source_group"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/source_local_button"
+                style="@style/SystemOptionsButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/wallpaper_source_local" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/source_reddit_projectivy_launcher_button"
+                style="@style/SystemOptionsButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/wallpaper_source_projectivy_wallpapers" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/source_reddit_projectivy_tmdb_button"
+                style="@style/SystemOptionsButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/wallpaper_source_projectivy_tmdb" />
+
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    </HorizontalScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/refresh_now_button"
+        style="@style/SystemOptionsButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="20dp"
+        android:text="@string/wallpaper_refresh_now" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/custom_subreddit_button"
+        style="@style/SystemOptionsButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="20dp"
+        android:text="@string/wallpaper_source_custom_subreddit" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/interval_button"
+        style="@style/SystemOptionsButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="20dp"
+        android:text="@string/wallpaper_interval" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/orientation_button"
+        style="@style/SystemOptionsButtonStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="20dp"
+        android:text="@string/wallpaper_orientation" />
+
+    <ProgressBar
+        android:id="@+id/wallpaper_loading_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:visibility="gone" />
+
+    <TextView
         android:id="@+id/wallpaper_empty_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
+        android:paddingTop="8dp"
         android:text="@string/wallpaper_empty"
         android:visibility="gone" />
 

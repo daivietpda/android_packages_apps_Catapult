@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.leanback)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.palette)
     implementation(libs.androidx.preference)
     implementation(libs.androidx.tvprovider)
     implementation(libs.coil)

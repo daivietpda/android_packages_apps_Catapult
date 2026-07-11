@@ -17,9 +17,10 @@
         android:visibility="gone" />
 
     <View
+        android:id="@+id/backgroundScrimView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#8C000000"
+        android:background="#2A000000"
         android:importantForAccessibility="no" />
 
     <LinearLayout
