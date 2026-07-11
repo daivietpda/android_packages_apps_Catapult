@@ -9,11 +9,13 @@ import android.app.ActivityOptions
 import android.app.PendingIntent
 import android.bluetooth.BluetoothManager
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Intent
 import android.icu.text.DateFormat
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.net.Uri
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.os.Build
@@ -44,6 +46,7 @@ import org.lineageos.tv.launcher.ext.wallpaperUri
 import org.lineageos.tv.launcher.notification.NotificationAdapter
 import org.lineageos.tv.launcher.notification.NotificationUtils
 import org.lineageos.tv.launcher.notification.ServiceConnectionState
+import org.lineageos.tv.launcher.notification.TvNotificationListener
 import org.lineageos.tv.launcher.utils.AppManager
 import org.lineageos.tv.launcher.view.NotificationItemView
 import org.lineageos.tv.launcher.view.TwoLineButton
@@ -114,7 +117,7 @@ class SystemOptionsActivity : ModalActivity(R.layout.activity_system_options),
         }
 
         allowNotificationAccessMaterialButton.setOnClickListener {
-            safeStartActivity(NOTIFICATION_SETTINGS)
+            safeStartActivity(getNotificationSettingsIntent())
         }
 
         notificationsVerticalGridView.adapter = notificationAdapter
@@ -331,7 +334,46 @@ class SystemOptionsActivity : ModalActivity(R.layout.activity_system_options),
         bluetoothTwoLineButton.setSpan(btSpan)
 
         bluetoothTwoLineButton.setOnClickListener {
-            safeStartActivity(BLUETOOTH_SETTINGS)
+            safeStartActivity(getBluetoothSettingsIntent())
+        }
+    }
+
+    private fun getBluetoothSettingsIntent(): Intent {
+        val bluetoothSettingsIntent = Intent(Settings.ACTION_BLUETOOTH_SETTINGS)
+        val preferredIntent = when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> TV_BLUETOOTH_SETTINGS
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> CONNECTED_DEVICES_SETTINGS
+            else -> CONNECT_INPUT_SETTINGS
+        }
+
+        return when {
+            preferredIntent.resolveActivity(packageManager) != null -> preferredIntent
+            CONNECTED_DEVICES_SETTINGS.resolveActivity(packageManager) != null ->
+                CONNECTED_DEVICES_SETTINGS
+            CONNECT_INPUT_SETTINGS.resolveActivity(packageManager) != null -> CONNECT_INPUT_SETTINGS
+            ADD_ACCESSORY_SETTINGS.resolveActivity(packageManager) != null -> ADD_ACCESSORY_SETTINGS
+            bluetoothSettingsIntent.resolveActivity(packageManager) != null -> bluetoothSettingsIntent
+            else -> SETTINGS
+        }
+    }
+
+    private fun getNotificationSettingsIntent(): Intent {
+        val listenerComponent = ComponentName(this, TvNotificationListener::class.java)
+        val detailIntent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS).apply {
+            putExtra(
+                Settings.EXTRA_NOTIFICATION_LISTENER_COMPONENT_NAME,
+                listenerComponent.flattenToString()
+            )
+        }
+        val appInfoIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", packageName, null)
+        }
+
+        return when {
+            detailIntent.resolveActivity(packageManager) != null -> detailIntent
+            NOTIFICATION_SETTINGS.resolveActivity(packageManager) != null -> NOTIFICATION_SETTINGS
+            appInfoIntent.resolveActivity(packageManager) != null -> appInfoIntent
+            else -> SETTINGS
         }
     }
 
@@ -423,7 +465,23 @@ class SystemOptionsActivity : ModalActivity(R.layout.activity_system_options),
     companion object {
         val SETTINGS: Intent = Intent(Settings.ACTION_SETTINGS)
         val WIFI_SETTINGS: Intent = Intent(Settings.ACTION_WIFI_SETTINGS)
-        val BLUETOOTH_SETTINGS: Intent = Intent().apply {
+        val CONNECTED_DEVICES_SETTINGS: Intent = Intent(
+            "com.android.tv.settings.CONNECTED_DEVICES"
+        ).apply {
+            setPackage("com.android.tv.settings")
+        }
+        val CONNECT_INPUT_SETTINGS: Intent = Intent(
+            "com.google.android.intent.action.CONNECT_INPUT"
+        ).apply {
+            setPackage("com.android.tv.settings")
+        }
+        val ADD_ACCESSORY_SETTINGS: Intent = Intent().apply {
+            setClassName(
+                "com.android.tv.settings",
+                "com.android.tv.settings.accessories.AddAccessoryActivity"
+            )
+        }
+        val TV_BLUETOOTH_SETTINGS: Intent = Intent().apply {
             setClassName("com.android.tv.settings", "com.android.tv.settings.slice.SliceActivity")
             putExtra(
                 "slice_uri",
