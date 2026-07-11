@@ -6,6 +6,7 @@
 package org.lineageos.tv.launcher
 
 import android.app.role.RoleManager
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
@@ -13,12 +14,14 @@ import android.os.Build
 import android.os.Bundle
 import android.transition.Slide
 import android.transition.TransitionManager
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -172,7 +175,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         super.onCreate(savedInstanceState)
 
         settingButton.setOnClickListener {
-            startActivity(Intent(android.provider.Settings.ACTION_SETTINGS))
+            safeStartActivity(Intent(android.provider.Settings.ACTION_SETTINGS))
         }
 
         notificationCountTextView.setOnClickListener {
@@ -251,14 +254,14 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     private fun setupAssistantButtons(assistIntent: Intent) {
         voiceAssistantButton.setOnClickListener {
-            startActivity(assistIntent)
+            safeStartActivity(assistIntent)
         }
 
         val keyboardAssistantIntent = Intent(assistIntent).apply {
             putExtra(Intent.EXTRA_ASSIST_INPUT_HINT_KEYBOARD, true)
         }
         keyboardAssistantButton.setOnClickListener {
-            startActivity(keyboardAssistantIntent)
+            safeStartActivity(keyboardAssistantIntent)
         }
 
         val transition = Slide().apply {
@@ -337,6 +340,15 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                     }
                 }
             )
+        }
+    }
+
+    private fun safeStartActivity(intent: Intent) {
+        try {
+            startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            Log.e("MainActivity", "Failed to start activity for intent: $intent", e)
+            Toast.makeText(this, R.string.error_activity_not_found, Toast.LENGTH_SHORT).show()
         }
     }
 }
