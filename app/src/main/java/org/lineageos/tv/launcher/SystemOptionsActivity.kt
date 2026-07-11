@@ -8,6 +8,7 @@ package org.lineageos.tv.launcher
 import android.app.ActivityOptions
 import android.app.PendingIntent
 import android.bluetooth.BluetoothManager
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.icu.text.DateFormat
 import android.net.ConnectivityManager
@@ -27,6 +28,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.leanback.widget.VerticalGridView
@@ -99,7 +101,7 @@ class SystemOptionsActivity : ModalActivity(R.layout.activity_system_options),
         setBluetoothButton()
 
         settingsButton.setOnClickListener {
-            startActivity(SETTINGS)
+            safeStartActivity(SETTINGS)
         }
 
         wallpaperMaterialButton.setOnClickListener {
@@ -112,7 +114,7 @@ class SystemOptionsActivity : ModalActivity(R.layout.activity_system_options),
         }
 
         allowNotificationAccessMaterialButton.setOnClickListener {
-            startActivity(NOTIFICATION_SETTINGS)
+            safeStartActivity(NOTIFICATION_SETTINGS)
         }
 
         notificationsVerticalGridView.adapter = notificationAdapter
@@ -185,7 +187,7 @@ class SystemOptionsActivity : ModalActivity(R.layout.activity_system_options),
         }
 
         networkTwoLineButton.setOnClickListener {
-            startActivity(WIFI_SETTINGS)
+            safeStartActivity(WIFI_SETTINGS)
         }
 
         lifecycleScope.launch {
@@ -329,7 +331,16 @@ class SystemOptionsActivity : ModalActivity(R.layout.activity_system_options),
         bluetoothTwoLineButton.setSpan(btSpan)
 
         bluetoothTwoLineButton.setOnClickListener {
-            startActivity(BLUETOOTH_SETTINGS)
+            safeStartActivity(BLUETOOTH_SETTINGS)
+        }
+    }
+
+    private fun safeStartActivity(intent: Intent) {
+        try {
+            startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            Log.e("SystemOptionsActivity", "Failed to start activity for intent: $intent", e)
+            Toast.makeText(this, R.string.error_activity_not_found, Toast.LENGTH_SHORT).show()
         }
     }
 
