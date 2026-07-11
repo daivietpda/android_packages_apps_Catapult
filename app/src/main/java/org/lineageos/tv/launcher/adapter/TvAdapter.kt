@@ -11,6 +11,7 @@ import androidx.annotation.CallSuper
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import org.lineageos.tv.launcher.R
 import org.lineageos.tv.launcher.ext.pixelsEqualTo
 import org.lineageos.tv.launcher.model.Launchable
 import org.lineageos.tv.launcher.view.Card
@@ -45,7 +46,11 @@ abstract class TvAdapter<L : Launchable, C : Card> : ListAdapter<L, TvAdapter<L,
 
     open fun handleClick(card: C) {
         val context = card.context
-        context.startActivity(card.launchIntent)
+        try {
+            context.startActivity(card.launchIntent)
+        } catch (e: Exception) {
+            Toast.makeText(context, R.string.error_activity_not_found, Toast.LENGTH_SHORT).show()
+        }
     }
 
     open fun handleLongClick(card: C) = false

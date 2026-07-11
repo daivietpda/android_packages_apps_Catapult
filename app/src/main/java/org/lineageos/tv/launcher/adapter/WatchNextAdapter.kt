@@ -5,12 +5,14 @@
 
 package org.lineageos.tv.launcher.adapter
 
+import android.util.Log
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.tvprovider.media.tv.WatchNextProgram
+import org.lineageos.tv.launcher.R
 import org.lineageos.tv.launcher.view.WatchNextCard
 
 class WatchNextAdapter : ListAdapter<WatchNextProgram, WatchNextAdapter.ViewHolder>(DIFF_UTIL) {
@@ -33,7 +35,13 @@ class WatchNextAdapter : ListAdapter<WatchNextProgram, WatchNextAdapter.ViewHold
             card.setOnClickListener {
                 val context = card.context
 
-                context.startActivity(card.launchIntent)
+                try {
+                    context.startActivity(card.launchIntent)
+                } catch (e: Exception) {
+                    Log.e("WatchNextAdapter", "Failed to start activity", e)
+                    Toast.makeText(context, R.string.error_activity_not_found, Toast.LENGTH_SHORT)
+                        .show()
+                }
             }
         }
 

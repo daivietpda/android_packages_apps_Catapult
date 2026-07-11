@@ -5,12 +5,14 @@
 
 package org.lineageos.tv.launcher.adapter
 
+import android.util.Log
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.tvprovider.media.tv.PreviewProgram
+import org.lineageos.tv.launcher.R
 import org.lineageos.tv.launcher.view.WatchNextCard
 
 class PreviewProgramsAdapter :
@@ -36,7 +38,13 @@ class PreviewProgramsAdapter :
             watchNextCard.setOnClickListener {
                 val context = watchNextCard.context
 
-                context.startActivity(watchNextCard.launchIntent)
+                try {
+                    context.startActivity(watchNextCard.launchIntent)
+                } catch (e: Exception) {
+                    Log.e("PreviewProgramsAdapter", "Failed to start activity", e)
+                    Toast.makeText(context, R.string.error_activity_not_found, Toast.LENGTH_SHORT)
+                        .show()
+                }
             }
         }
 
