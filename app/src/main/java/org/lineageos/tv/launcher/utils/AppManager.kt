@@ -12,7 +12,10 @@ import android.content.pm.ApplicationInfo.FLAG_SYSTEM
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.net.Uri
+import android.util.Log
+import android.widget.Toast
 import androidx.preference.PreferenceManager
+import org.lineageos.tv.launcher.R
 import org.lineageos.tv.launcher.ext.favoriteApps
 import org.lineageos.tv.launcher.model.LeanbackAppInfo
 
@@ -57,7 +60,12 @@ object AppManager {
     fun uninstallApp(context: Context, packageName: String) {
         val packageUri = Uri.parse("package:$packageName")
         val uninstallIntent = Intent(Intent.ACTION_DELETE, packageUri)
-        context.startActivity(uninstallIntent, null)
+        try {
+            context.startActivity(uninstallIntent, null)
+        } catch (e: Exception) {
+            Log.e("AppManager", "Failed to uninstall app $packageName", e)
+            Toast.makeText(context, R.string.error_activity_not_found, Toast.LENGTH_SHORT).show()
+        }
     }
 
     fun uninstallable(app: ApplicationInfo, context: Context): Boolean {
