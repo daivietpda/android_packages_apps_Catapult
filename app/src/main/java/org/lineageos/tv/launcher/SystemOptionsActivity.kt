@@ -371,10 +371,12 @@ class SystemOptionsActivity : ModalActivity(R.layout.activity_system_options),
         val appInfoIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
             data = Uri.fromParts("package", packageName, null)
         }
+        val alternateIntent = Intent("android.settings.NOTIFICATION_LISTENER_SETTINGS")
 
         return when {
             detailIntent.resolveActivity(packageManager) != null -> detailIntent
             NOTIFICATION_SETTINGS.resolveActivity(packageManager) != null -> NOTIFICATION_SETTINGS
+            alternateIntent.resolveActivity(packageManager) != null -> alternateIntent
             appInfoIntent.resolveActivity(packageManager) != null -> appInfoIntent
             else -> SETTINGS
         }
