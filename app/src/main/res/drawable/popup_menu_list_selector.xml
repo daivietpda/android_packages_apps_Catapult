@@ -4,6 +4,8 @@
      SPDX-License-Identifier: Apache-2.0
 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@android:color/transparent" />
-    <corners android:radius="20dp" />
+    <solid android:color="#7A859B" />
+    <stroke
+        android:width="2dp"
+        android:color="#FFFFFFFF" />
 </shape>

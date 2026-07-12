@@ -15,6 +15,7 @@ import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ListView
 import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
@@ -140,5 +141,40 @@ abstract class AppCardCommon @JvmOverloads constructor(
         }
 
         popupMenu.show()
+        applyPopupMenuFocusHighlight(popupMenu)
+    }
+
+    private fun applyPopupMenuFocusHighlight(popupMenu: PopupMenu) {
+        runCatching {
+            val helperField = popupMenu.javaClass.getDeclaredField("mPopup").apply {
+                isAccessible = true
+            }
+            val helper = helperField.get(popupMenu)
+
+            val getPopupMethod = helper.javaClass.getDeclaredMethod("getPopup").apply {
+                isAccessible = true
+            }
+            val popup = getPopupMethod.invoke(helper)
+
+            val getListViewMethod = popup.javaClass.getDeclaredMethod("getListView").apply {
+                isAccessible = true
+            }
+            val listView = getListViewMethod.invoke(popup) as? ListView ?: return
+
+            val selector = AppCompatResources.getDrawable(
+                context,
+                R.drawable.popup_menu_list_selector
+            ) ?: return
+
+            listView.selector = selector
+            listView.isDrawSelectorOnTop = true
+            listView.choiceMode = ListView.CHOICE_MODE_SINGLE
+            listView.setSelection(0)
+            listView.requestFocus()
+            listView.post {
+                listView.refreshDrawableState()
+                listView.invalidate()
+            }
+        }
     }
 }

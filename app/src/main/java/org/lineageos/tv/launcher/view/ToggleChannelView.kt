@@ -5,13 +5,13 @@
 
 package org.lineageos.tv.launcher.view
 
+import android.animation.AnimatorInflater
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.google.android.material.materialswitch.MaterialSwitch
 import org.lineageos.tv.launcher.R
-import org.lineageos.tv.launcher.ext.getAttributeResourceId
 import org.lineageos.tv.launcher.model.Channel
 
 class ToggleChannelView @JvmOverloads constructor(
@@ -28,8 +28,10 @@ class ToggleChannelView @JvmOverloads constructor(
         inflate(context, R.layout.toggle_channel, this)
         isFocusable = true
         isClickable = true
-        setBackgroundResource(
-            context.getAttributeResourceId(android.R.attr.selectableItemBackground)
+        setBackgroundResource(R.drawable.toggle_channel_background)
+        stateListAnimator = AnimatorInflater.loadStateListAnimator(
+            context,
+            R.animator.modal_list_item_state_animator
         )
     }
 

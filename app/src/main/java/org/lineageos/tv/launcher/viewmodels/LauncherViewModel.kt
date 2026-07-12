@@ -64,6 +64,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         .combine(LauncherRepository.knownChannels(context)) { previewChannels, knownChannels ->
             previewChannels.orderSuggestions(knownChannels) { it.first.id }
         }
+        .map { channelsToPrograms ->
+            channelsToPrograms.filter { (channel, programs) ->
+                !channel.isExternalChannel || !programs.isNullOrEmpty()
+            }
+        }
         .flowOn(Dispatchers.IO)
         .stateIn(
             viewModelScope,

@@ -8,6 +8,7 @@ package org.lineageos.tv.launcher.utils
 import android.net.Uri
 import android.graphics.BitmapFactory
 import org.json.JSONObject
+import java.net.URI
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.random.Random
@@ -36,8 +37,8 @@ object RedditWallpaperRepository {
             for (index in 0 until items.length()) {
                 val item = items.optJSONObject(index) ?: continue
                 extractImageUrls(item)
-                    .filter { matchesOrientation(it, orientation) }
-                    .forEach { imageUris.add(Uri.parse(it)) }
+                    .firstOrNull { matchesOrientation(it, orientation) }
+                    ?.let { imageUris.add(Uri.parse(it)) }
             }
 
             if (imageUris.isNotEmpty()) {
@@ -46,7 +47,9 @@ object RedditWallpaperRepository {
                 // If the requested orientation doesn't yield anything, fall back to all images.
                 for (index in 0 until items.length()) {
                     val item = items.optJSONObject(index) ?: continue
-                    extractImageUrls(item).forEach { imageUris.add(Uri.parse(it)) }
+                    extractImageUrls(item)
+                        .firstOrNull()
+                        ?.let { imageUris.add(Uri.parse(it)) }
                 }
                 imageUris.distinct()
             }
@@ -90,11 +93,8 @@ object RedditWallpaperRepository {
     private fun extractImageUrls(item: JSONObject): List<String> {
         val urls = mutableListOf<String>()
 
-        item.optString("thumbnail").takeIf { it.isNotBlank() }?.let(urls::add)
-        item.optJSONObject("enclosure")
-            ?.optString("thumbnail")
-            ?.takeIf { it.isNotBlank() }
-            ?.let(urls::add)
+        // RSS thumbnail fields are often low-resolution preview assets.
+        item.optString("link").takeIf { it.isNotBlank() }?.let(urls::add)
 
         listOf("description", "content").forEach { field ->
             val html = item.optString(field)
@@ -102,9 +102,10 @@ object RedditWallpaperRepository {
         }
 
         return urls
-            .map { it.replace("&amp;", "&") }
+            .mapNotNull { normalizeImageUrl(it) }
             .filter { isImageUrl(it) }
-            .map { normalizeImageUrl(it) }
+            .sortedByDescending { qualityScore(it) }
+            .distinctBy { canonicalImageKey(it) }
             .distinct()
     }
 
@@ -162,8 +163,51 @@ object RedditWallpaperRepository {
             )
     }
 
-    private fun normalizeImageUrl(url: String): String {
-        return url.replace("amp;", "")
+    private fun normalizeImageUrl(url: String): String? {
+        val decoded = url.replace("&amp;", "&")
+        val uri = runCatching { URI(decoded) }.getOrNull() ?: return null
+        val host = uri.host?.lowercase() ?: return null
+
+        if (host.contains("thumbs.redditmedia.com") || host.contains("external-preview.redd.it")) {
+            return null
+        }
+
+        val sanitized = URI(
+            uri.scheme,
+            uri.userInfo,
+            when {
+                host == "preview.redd.it" -> "i.redd.it"
+                else -> uri.host
+            },
+            uri.port,
+            uri.path,
+            null,
+            null
+        ).toString()
+
+        return sanitized
+    }
+
+    private fun qualityScore(url: String): Int {
+        val lower = url.lowercase()
+        var score = 0
+        if (lower.contains("i.redd.it")) {
+            score += 200
+        }
+        if (lower.endsWith(".png") || lower.contains(".png?")) {
+            score += 20
+        }
+        if (lower.endsWith(".webp") || lower.contains(".webp?")) {
+            score += 10
+        }
+        return score
+    }
+
+    private fun canonicalImageKey(url: String): String {
+        val uri = runCatching { URI(url) }.getOrNull() ?: return url
+        val host = uri.host?.lowercase() ?: ""
+        val path = uri.path?.lowercase()?.substringBeforeLast('.') ?: ""
+        return "$host$path"
     }
 
     private fun normalizeSubreddit(value: String): String {

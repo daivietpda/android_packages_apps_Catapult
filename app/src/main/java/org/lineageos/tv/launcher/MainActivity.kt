@@ -123,6 +123,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     private var wallpaperRotationJob: Job? = null
     private var scrimDefaultColor = Color.argb(96, 0, 0, 0)
     private var scrimExpandedColor = Color.argb(70, 0, 0, 0)
+    private var mainGridTopPaddingWithTopBar = 24
 
     companion object {
         private const val TOP_BAR_ANIMATION_DURATION_MS = 220L
@@ -130,6 +131,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         private const val SCRIM_ALPHA_EXPANDED = 0.90f
         private const val SCRIM_ALPHA_DEFAULT = 1f
         private const val WALLPAPER_SCALE_EXPANDED = 1.08f
+        private const val MAIN_GRID_TOP_OFFSET_RATIO = 0.5f
     }
 
     private val sharedPreferences by lazy {
@@ -226,6 +228,11 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         }
 
         mainVerticalGridView.adapter = mainVerticalAdapter
+        mainVerticalGridView.post {
+            mainGridTopPaddingWithTopBar =
+                (mainVerticalGridView.height * MAIN_GRID_TOP_OFFSET_RATIO).toInt()
+            mainVerticalGridView.updatePadding(top = mainGridTopPaddingWithTopBar)
+        }
         setupTopBarAutoHideOnScroll()
 
         favoritesAdapter.onFavoritesChangedCallback = {
@@ -440,7 +447,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             .setInterpolator(DecelerateInterpolator())
             .start()
 
-        mainVerticalGridView.updatePadding(top = 24)
+        mainVerticalGridView.updatePadding(top = mainGridTopPaddingWithTopBar)
     }
 
     private fun askForHomeRoleIfNeeded() {

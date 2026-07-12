@@ -5,6 +5,7 @@
 
 package org.lineageos.tv.launcher.view
 
+import android.animation.AnimatorInflater
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.ImageView
@@ -12,7 +13,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.google.android.material.materialswitch.MaterialSwitch
 import org.lineageos.tv.launcher.R
-import org.lineageos.tv.launcher.ext.getAttributeResourceId
 import org.lineageos.tv.launcher.model.Launchable
 
 class AddFavoriteItemView @JvmOverloads constructor(
@@ -27,8 +27,10 @@ class AddFavoriteItemView @JvmOverloads constructor(
 
     init {
         inflate(context, R.layout.favorites_add_app_card, this)
-        setBackgroundResource(
-            context.getAttributeResourceId(android.R.attr.selectableItemBackground)
+        setBackgroundResource(R.drawable.modal_list_item_background)
+        stateListAnimator = AnimatorInflater.loadStateListAnimator(
+            context,
+            R.animator.modal_list_item_state_animator
         )
     }
 
